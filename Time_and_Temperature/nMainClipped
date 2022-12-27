@@ -1,0 +1,123 @@
+/************** ECE2049 Lab 3 ******************/
+/**************   2/17/2017   ******************/
+/***********************************************/
+
+//#include <msp430.h>
+//#include <stdlib.h>
+//#include "peripherals.h"
+
+// void configADC12();
+void startADC12();
+void startTA2();
+__interrupt void TimerA2_ISR();
+
+// #define CALADC12_15V_30C *((unsigned int *)0x1A1A) //6682
+// #define CALADC12_15V_85C *((unsigned int *)0x1A1C) //6684
+
+unsigned int tempSense;
+unsigned long timer = 0;
+
+float celsiusPerBit;
+
+unsigned int bits30, bits85;
+unsigned int A10results, A0results;
+
+unsigned long time[60];
+float tempC[60];
+
+char buzzerFlag = 0;
+
+void main()
+{
+    // WDTCTL = WDTPW | WDTHOLD;
+    // REFCTL0 &= ~REFMSTR;
+
+    // initLeds();
+    timer = 2381673; 
+    // configDisplay();
+    // configKeypad();
+
+    // config_2LPB();
+    // config_4LBB();
+
+    // _BIS_SR(GIE);
+
+    // GrClearDisplay(&g_sContext);
+
+    while (1)
+    {
+        char keyPress;
+        // startTA2();
+        configADC12();
+        startADC12();
+
+        if (timer != prevTime)
+        {
+            prevTime = timer;
+            convertTime(time[timer % 60]);
+            displayTime();
+            convertTemp(tempC[timer % 60]);
+            displayTemp();
+        }
+
+        keyPress = get4LBBState();
+
+        if (keyPress == 1)
+        {
+            while (get4LBBState() != 2)
+            {
+                startADC12();
+                if (timer % 2L == 0L)
+                {
+                    convertTime(time[timer % 60]);
+                    displayTime();
+                    convertTemp(tempC[timer % 60]);
+                    displayTemp();
+                }
+                BuzzerWheel(A0results);
+            }
+            BuzzerOff();
+        }
+    }
+}
+
+void configADC12()
+{
+    ADC12CTL0 = ADC12SHT0_9 | ADC12REFON | ADC12ON | ADC12MSC; // Internal ref = 1.5V
+    ADC12CTL1 = ADC12SHP | ADC12CONSEQ_1;                      // Enable sample timer
+    // Using ADC12MEM0 to store reading
+    ADC12MCTL0 = ADC12SREF_1 + ADC12INCH_10; // ADC i/p ch A10 = temp sense
+                                             // ACD12SREF_1 = internal ref = 1.5v
+    P6SEL |= BIT0;
+    ADC12MCTL1 = ADC12SREF_0 + ADC12INCH_0 + ADC12EOS;
+    ADC12IE = BIT1; // delay to allow Ref to settle
+    ADC12CTL0 |= ADC12ENC;
+    // Use calibration data stored in info memory
+    bits30 = CALADC12_15V_30C;
+    bits85 = CALADC12_15V_85C;
+    celsiusPerBit = ((float)(85.0 - 30.0)) / ((float)(bits85 - bits30));
+}
+
+void startADC12()
+{
+    ADC12CTL0 &= ~ADC12SC; // clear the start bit
+    ADC12CTL0 |= ADC12SC;  // Sampling and conversion start
+}
+
+#pragma vector = ADC12_VECTOR
+__interrupt void ADC12ISR()
+{
+    A10results = ADC12MEM0 & 0x0FFF;
+    tempSense = A10results;
+    degC = (float)((long)tempSense - CALADC12_15V_30C) * celsiusPerBit + 30.0;
+    A0results = ADC12MEM1 & 0x0FFF;
+}
+
+// Timer A2 interrupt service routine
+#pragma vector = TIMER2_A0_VECTOR
+__interrupt void TimerA2_ISR()
+{
+    timer++;
+    time[timer % 60] = timer;
+    tempC[timer % 60] = degC;
+}
