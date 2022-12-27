@@ -1,0 +1,74 @@
+Welcome State
+- welcome message instructs user to press ‘*’ to begin
+- come back to this state when lost or by pressing ‘#’
+
+Count Down State
+- 3 2 1 GO Displayed
+- LED1, LED2, LED1, LED1&2 on go
+
+
+Check for button presses when song plays (during the notes)
+	need interrupts
+
+Play the game
+- song sequence plays
+- if button press not pressed by next note = wrong
+
+
+Timer A2 starts at the beginning of the song and compares the duration of the note 
+list the global count of interrupts If note duration is 700 starts at a timer count of x, 
+it should end at timer count x+700
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+Simple Outline:
+
+1. Welcome
+2. i = 0
+3. LED i 
+4. if button == i
+	yes: i++  --> step 2
+	no: loose --> step 1
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+	player press key press button (1-4) corresponding LED flashes with n assign duration of note
+
+// a d a d a d a        a d a d f       e d c b bphat a d a f g a        d        a d b a g f e d
+// A:        74.5
+// Bflat:    70.3
+// B:        66.3
+// C:        63
+// D:        55.8    27.9   111.6
+// E:        49.7    24.9   99
+// F:        46.9    23.5   94
+// G:        41.8
+
+// a d a d a d a        a d a d f       e d c b bphat a d a f g a        d        a d b a g f e d
+//int noteArray[34] = {A, D, A, lD,
+//                 A, D, A,
+//                 A, D, A, D,
+//                 F, rest, E, D, c, B, Bflat,
+//                 A, D, A, F, G,
+//                 A, D, A,
+//                 D, B, A, G,
+//                 F, E, D, rest};
+
+
+
+//int lengthArray[34] = {
+//    q,q,q,q,
+//    q,q,h,
+//    q,q,q,q
+//    q,e,e,e,e,e,e,
+//    q,q,q,e,e,
+//    q,q,h,
+//    q,e,e,q,q,
+//    q,q,q,q
+//
+//};
+
+
+
+
+    
